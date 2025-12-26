@@ -1,0 +1,44 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Edit Task - Todo List{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <div class="form-container">
+        <h2>Edit Task</h2>
+
+        <form method="post" class="task-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                {{ form.title.label_tag }}
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="error">{{ form.title.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.description.label_tag }}
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="error">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                {{ form.due_date.label_tag }}
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                    <div class="error">{{ form.due_date.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit">Save Changes</button>
+                <a href="{% url 'calendar' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

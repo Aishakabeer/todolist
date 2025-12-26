@@ -1,0 +1,102 @@
+{% extends 'tasks/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Calendar - Todo List{% endblock %}
+
+{% block content %}
+<div class="calendar-section">
+    <div class="calendar-header">
+        <h2>{{ month_name }} {{ year }}</h2>
+        <div class="calendar-nav">
+            <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn-nav">← Previous</a>
+            <a href="?year={{ now.year }}&month={{ now.month }}" class="btn-nav">Today</a>
+            <a href="?year={{ next_year }}&month={{ next_month }}" class="btn-nav">Next →</a>
+        </div>
+    </div>
+
+    <div class="calendar-container">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Sun</th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in calendar_data %}
+                <tr>
+                    {% for day in week %}
+                    <td class="calendar-day {% if day.is_today %}today{% endif %}">
+                        {% if day %}
+                            <div class="day-number">{{ day.day }}</div>
+                            <div class="day-tasks">
+                                {% with date_key=day.date|date:"Y-m-d" %}
+                                    {% if tasks_by_date|get_item:date_key %}
+                                        {% for task in tasks_by_date|get_item:date_key %}
+                                            <div class="task-item {% if task.completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+                                                <input type="checkbox" class="task-checkbox" 
+                                                    {% if task.completed %}checked{% endif %} 
+                                                    onchange="toggleTask({{ task.id }})">
+                                                <span class="task-title">{{ task.title|truncatewords:3 }}</span>
+                                                <a href="{% url 'edit_task' task.id %}" class="task-edit">✎</a>
+                                            </div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="quick-add">
+        <h3>Add New Task for Selected Date</h3>
+        <form method="post" action="{% url 'add_task' %}" class="quick-form">
+            {% csrf_token %}
+            <input type="text" name="title" placeholder="Task title" required>
+            <input type="date" name="due_date" required>
+            <button type="submit" class="btn-submit">Add Task</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleTask(taskId) {
+    const formData = new FormData();
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                      document.querySelector('input[name=csrfmiddlewaretoken]')?.value;
+    
+    fetch(`/task/${taskId}/toggle/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (taskElement) {
+                taskElement.classList.toggle('completed');
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Custom template tag filter for dictionary access
+</script>
+{% endblock %}

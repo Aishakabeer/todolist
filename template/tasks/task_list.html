@@ -1,0 +1,73 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}All Tasks - Todo List{% endblock %}
+
+{% block content %}
+<div class="tasks-section">
+    <div class="tasks-header">
+        <h2>All Tasks</h2>
+        <div class="filter-buttons">
+            <a href="{% url 'task_list' %}" class="btn-filter {% if not completed_filter %}active{% endif %}">All</a>
+            <a href="?completed=false" class="btn-filter {% if completed_filter == 'false' %}active{% endif %}">Pending</a>
+            <a href="?completed=true" class="btn-filter {% if completed_filter == 'true' %}active{% endif %}">Completed</a>
+        </div>
+    </div>
+
+    {% if tasks %}
+        <div class="tasks-list">
+            {% for task in tasks %}
+            <div class="task-card {% if task.completed %}completed{% endif %}" data-task-id="{{ task.id }}">
+                <div class="task-header">
+                    <input type="checkbox" class="task-checkbox-large" 
+                        {% if task.completed %}checked{% endif %} 
+                        onchange="toggleTaskAndRefresh({{ task.id }})">
+                    <h3 class="task-title">{{ task.title }}</h3>
+                </div>
+                
+                {% if task.description %}
+                <p class="task-description">{{ task.description }}</p>
+                {% endif %}
+
+                <div class="task-meta">
+                    <span class="task-date">📅 {{ task.due_date|date:"M d, Y" }}</span>
+                    <span class="task-status {% if task.completed %}status-done{% else %}status-pending{% endif %}">
+                        {% if task.completed %}✓ Completed{% else %}⏳ Pending{% endif %}
+                    </span>
+                </div>
+
+                <div class="task-actions">
+                    <a href="{% url 'task_detail' task.id %}" class="btn-action btn-view">View</a>
+                    <a href="{% url 'edit_task' task.id %}" class="btn-action btn-edit">Edit</a>
+                    <a href="{% url 'delete_task' task.id %}" class="btn-action btn-delete">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-tasks">
+            <p>📭 No tasks found. <a href="{% url 'add_task' %}">Create one now!</a></p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleTaskAndRefresh(taskId) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                      document.querySelector('input[name=csrfmiddlewaretoken]')?.value;
+    
+    fetch(`/task/${taskId}/toggle/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}
